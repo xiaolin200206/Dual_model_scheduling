@@ -1,0 +1,26 @@
+# Python dependencies for native (non-Docker) installation on Jetson.
+#
+# NOTE: torch, torchvision, and onnxruntime-gpu do NOT have standard
+# aarch64+CUDA builds on PyPI. Install those three separately using the
+# Jetson-specific wheels below BEFORE running `pip install -r requirements.txt`
+# for everything else. See docker/DOCKER_NOTES.md section 5-7 for why this
+# matters and what goes wrong if you skip this.
+#
+# Jetson-specific installs (run these first, one per line, JetPack 6.x):
+#   pip3 install --no-deps https://github.com/ultralytics/assets/releases/download/v0.0.0/onnxruntime_gpu-1.23.0-cp310-cp310-linux_aarch64.whl
+#   pip3 install --no-deps https://github.com/ultralytics/assets/releases/download/v0.0.0/torch-2.10.0-cp310-cp310-linux_aarch64.whl
+#   pip3 install --no-deps https://github.com/ultralytics/assets/releases/download/v0.0.0/torchvision-0.25.0-cp310-cp310-linux_aarch64.whl
+#
+# If you're setting this up fresh, using Docker (see docker/) is strongly
+# recommended over native install — it sidesteps all of the above.
+
+numpy==1.26.1
+onnx==1.22.0
+opencv-python-headless
+Pillow==9.0.1
+protobuf==7.35.1
+psutil==7.2.2
+PyYAML
+requests==2.25.1
+tqdm==4.68.3
+ultralytics==8.4.80
