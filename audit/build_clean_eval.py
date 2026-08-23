@@ -111,7 +111,7 @@ def main():
         reasons = []
         k = img_id(p.name)
         if k and k in train_ids:
-            reasons.append(f"shared source id {k} with a training partition")
+            reasons.append("shared source id with a training partition")
         h = dhash(p)
         dmin = min((ham(h, th) for th in train_hashes), default=None) \
             if h is not None else None
@@ -159,8 +159,11 @@ def main():
     print(f"图片: {len(src_imgs)} -> {len(keep)}  (其中无标注背景图 {missing} 张)")
 
     # ---- manifest ----
-    man = [f"clean eval set built from: {SOURCE}",
-           f"purged against train union: {[str(t) for t in TRAIN_SETS]}",
+    man = [f"clean eval set built from: leaf validation partition "
+           f"({len(src_imgs)} images)",
+           f"purged against train union: {len(TRAIN_SETS)} training partitions of "
+           f"this dataset lineage ({len(train_hashes):,} images, "
+           f"{len(train_ids):,} identifiable source ids)",
            f"criteria: dHash hamming <= {THRESH}  OR  shared source id",
            f"kept {len(keep)} / {len(src_imgs)} images",
            "",
