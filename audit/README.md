@@ -28,4 +28,8 @@ python build_clean_eval.py        # emit the leak-free evaluation set + manifest
 ```
 
 `build_clean_eval.py` writes `manifest.txt` recording every excluded image and the
-reason for its exclusion. That manifest, not the images, is what the paper releases.
+reason for its exclusion. Images are identified there by 64-bit dHash and by the
+minimum Hamming distance to a training image, never by filename or by the image
+itself, so the exclusion is checkable without releasing the dataset. That manifest,
+not the images, is what the paper releases; a copy generated from the partitions used
+in the paper is committed here as `manifest.txt`.

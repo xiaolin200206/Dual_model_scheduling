@@ -111,11 +111,13 @@ def main():
         reasons = []
         k = img_id(p.name)
         if k and k in train_ids:
-            reasons.append(f"原图ID {k} 在 train 中")
+            reasons.append(f"shared source id {k} with a training partition")
         h = dhash(p)
-        if h is not None and any(ham(h, th) <= THRESH for th in train_hashes):
-            reasons.append("感知哈希与 train 近重复")
-        (drop if reasons else keep).append((p, reasons))
+        dmin = min((ham(h, th) for th in train_hashes), default=None) \
+            if h is not None else None
+        if dmin is not None and dmin <= THRESH:
+            reasons.append(f"perceptual hash within Hamming {dmin} of a training image")
+        (drop if reasons else keep).append((p, reasons, h, dmin))
 
     print(f"保留 {len(keep)} 张, 剔除 {len(drop)} 张 "
           f"({len(drop) / len(src_imgs) * 100:.1f}%)")
@@ -129,7 +131,7 @@ def main():
 
     src_lbl = lbl_dir_of(SOURCE)
     kept_labels, missing = [], 0
-    for p, _ in keep:
+    for p, *_ in keep:
         shutil.copy2(p, out_img / p.name)
         lp = src_lbl / (p.stem + ".txt")
         if lp.exists():
@@ -159,11 +161,22 @@ def main():
     # ---- manifest ----
     man = [f"clean eval set built from: {SOURCE}",
            f"purged against train union: {[str(t) for t in TRAIN_SETS]}",
-           f"criteria: dHash hamming <= {THRESH}  OR  shared IMG id",
+           f"criteria: dHash hamming <= {THRESH}  OR  shared source id",
            f"kept {len(keep)} / {len(src_imgs)} images",
-           "", "=== DROPPED ==="]
-    for p, reasons in drop:
-        man.append(f"{p.name}\t{'; '.join(reasons)}")
+           "",
+           "Excluded images are identified by 64-bit dHash rather than by filename or",
+           "image, so that the exclusion is checkable without releasing the dataset.",
+           "",
+           "=== DROPPED ===",
+           f"{'dhash':>18s}  {'d_min':>5s}  reason"]
+    for p, reasons, h, dmin in drop:
+        hs = f"{h:016x}" if h is not None else "-" * 16
+        ds = f"{dmin}" if dmin is not None else "-"
+        man.append(f"{hs:>18s}  {ds:>5s}  {'; '.join(reasons)}")
+    man.append("")
+    man.append("=== RETAINED (dhash only) ===")
+    for p, _r, h, _d in keep:
+        man.append(f"{h:016x}" if h is not None else "-" * 16)
     (OUT / "manifest.txt").write_text("\n".join(man), encoding="utf-8")
 
     print(f"\n输出: {OUT}")

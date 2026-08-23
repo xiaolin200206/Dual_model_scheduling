@@ -47,7 +47,7 @@ seven-class pest taxonomy of the deployed weights.
 │   └── ondemand_session.py         instrumented on-demand inspection session
 ├── reproduce/
 │   └── make_figures.py             regenerate every figure from the telemetry
-└── figures/                        Fig. 1–3 at 300 dpi (PNG + PDF)
+└── figures/                        Fig. 1–5 at 300 dpi (PNG + PDF)
 ```
 
 `jetson/main.py` and `raspberry-pi/main.py` are identical: platform detection at
@@ -65,6 +65,11 @@ identified by digest so that the claim is checkable:
 | `yolov11s_leaf.onnx` | 5 | Ultralytics 8.4.63, 2026-06-17 | `1934813e2319fa1f9ab60fb681ae5838324bc3a53dc3be18a23f23b9e5a1636f` |
 | `yolov11n_pest.onnx` | 7 | Ultralytics 8.4.63, 2026-06-19 | `45f18a01d6e0936a2500b15ef6e745200433ba27d8769a091a2040a016c9ab46` |
 
+The weights were exported with Ultralytics 8.4.63 on the training machine; the
+deployment runtime pins `ultralytics==8.4.80` (`jetson/requirements.txt`). The two
+versions are unrelated: the export produced the ONNX artefacts above, and inference
+at run time is performed by ONNX Runtime, not by the Ultralytics PyTorch stack.
+
 Leaf classes: `algal`, `leaf_rot`, `Phomopsis`, `pink`, `root`.
 Pest classes: `leafhopper damage`, `Psyllid`, `Psyllid_damage`, `Scale_insect`,
 `Stem-borer`, `weevil`, `weevil_damage`.
@@ -75,7 +80,7 @@ been corrected to the classes above.
 
 ## Reproducing the results
 
-**Telemetry results (paper Sections 4.1–4.4).** Fully reproducible from this
+**Telemetry results (paper Sections 3.1–3.4).** Fully reproducible from this
 repository:
 
 ```bash
@@ -83,7 +88,7 @@ python compare_platforms.py
 python reproduce/make_figures.py --repo . --out figures/
 ```
 
-**Accuracy (paper Section 3.2).** Not reproducible by a third party, because the
+**Accuracy (paper Section 2.2).** Not reproducible by a third party, because the
 images and weights are not released. The procedure is released so that it can be run
 against any detection dataset:
 
@@ -97,6 +102,10 @@ python accuracy/run_model_eval.py            # mAP and per-class figures
 On the partitions used in the paper the audit removed 37 of 184 leaf images (147
 retained, 471 instances). Exclusion was not uniform across classes: Phomopsis lost
 48% of its instances and leaf_rot 35%, while pink and root lost none.
+
+`run_model_eval.py` reports two aggregates: over all classes, and excluding classes
+with fewer than fifteen instances. The paper reports both — pest mAP@0.5 = 0.451
+over all seven classes and 0.398 excluding the four-instance `weevil` class.
 
 **On-demand session.** The intermittent duty the paper argues for is identified as
 future work; the instrumentation is released so that the measurement can be made:
@@ -126,8 +135,10 @@ three-hour configuration.
 
 The durian disease and pest image datasets and the trained weights are assets of an
 ongoing commercialisation effort and are not released. This restriction applies to
-those two artefacts only: all code, all telemetry, and the audit manifest (released
-as perceptual hashes rather than as images) are available here.
+those two artefacts only: all code and all telemetry are available here. The audit
+manifest — which records every excluded image and the reason for its exclusion, as
+perceptual hashes rather than as images — is emitted by `audit/build_clean_eval.py`
+and is released in `audit/manifest.txt`.
 
 ## Limitations carried in the paper
 

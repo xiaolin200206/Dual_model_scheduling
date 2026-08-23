@@ -38,51 +38,6 @@ DUTY = ["duty", "nonduty"]
 C_RPI, C_JET = "#4a6fa5", "#c4703c"
 
 
-# ------------------------------------------------------------------ Fig. 1
-def fig1_positioning(out):
-    fig, ax = plt.subplots(figsize=(7.2, 2.6))
-    ax.set_xlim(-0.1, 10.4); ax.set_ylim(0, 3.2); ax.axis("off")
-
-    boxes = [
-        (0.1, "Dataset-integrity audit\nand duty-cycle thermal study",
-         "Lin (2026a)", "leakage audit;\nthermal cut-off criterion", False),
-        (3.5, "Single-platform dual-model\ninference characterisation",
-         "Lin (2026b)", "scheduling effect on\nRaspberry Pi 5", False),
-        (6.9, "This study: cross-platform\nselection for procurement",
-         "", "audited accuracy;\ncost, endurance, thermal", True),
-    ]
-    for x0, title, cite, sub, cur in boxes:
-        ax.add_patch(FancyBboxPatch(
-            (x0, 0.75), 3.2, 2.15, boxstyle="round,pad=0.06,rounding_size=0.12",
-            linewidth=1.6 if cur else 1.0,
-            edgecolor="0.15" if cur else "0.45",
-            facecolor="white" if cur else "0.94"))
-        ax.text(x0 + 1.6, 2.55, title, ha="center", va="center",
-                fontsize=8.6, fontweight="bold" if cur else "normal",
-                color="0.1" if cur else "0.25")
-        if cite:
-            ax.text(x0 + 1.6, 1.93, cite, ha="center", va="center",
-                    fontsize=8.5, color="0.35")
-        ax.text(x0 + 1.6, 1.28, sub, ha="center", va="center",
-                fontsize=8, style="italic", color="0.35")
-
-    for x0 in (3.38, 6.78):
-        ax.add_patch(FancyArrowPatch((x0 - 0.14, 1.82), (x0 + 0.14, 1.82),
-                                     arrowstyle="-|>", mutation_scale=11,
-                                     linewidth=1.1, color="0.3"))
-
-    labels = ["one platform,\naudited dataset", "one platform,\ntwo models",
-              "two platforms,\nprocurement decision"]
-    for (x0, *_), lab in zip(boxes, labels):
-        ax.plot([x0 + 0.1, x0 + 0.1], [0.72, 0.45], lw=0.7, color="0.6")
-        ax.text(x0 + 0.16, 0.28, lab, ha="left", va="center",
-                fontsize=7.5, color="0.4")
-
-    fig.savefig(out / "Fig1_positioning.png", dpi=DPI)
-    fig.savefig(out / "Fig1_positioning.pdf")
-    plt.close(fig)
-    print("Fig. 1 ok")
-
 
 # ------------------------------------------------------------------ loading
 def load_runs(repo):
@@ -152,14 +107,14 @@ def fig2_latency(runs, out):
     print("Fig. 2 ok")
 
 
-# ------------------------------------------------------------------ Fig. 3
+# ------------------------------------------------------------------ Fig. 4
 def to_minutes(ts):
     t = pd.to_datetime(ts, format="%H:%M:%S.%f", errors="coerce")
     t = t.ffill()
     return (t - t.iloc[0]).dt.total_seconds() / 60.0
 
 
-def fig3_ambient(repo, out):
+def fig4_ambient(repo, out):
     rp = pd.read_csv(Path(repo) / "raspberry-pi" / "data" / "raspberry_battery.csv")
     jt = pd.read_csv(Path(repo) / "jetson" / "data" / "jetson_battery.csv")
     fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.5))
@@ -204,10 +159,10 @@ def fig3_ambient(repo, out):
         ax.set_axisbelow(True)
         ax.tick_params(labelsize=7)
     fig.tight_layout()
-    fig.savefig(out / "Fig3_ambient_trials.png", dpi=DPI)
-    fig.savefig(out / "Fig3_ambient_trials.pdf")
+    fig.savefig(out / "Fig4_ambient_trials.png", dpi=DPI)
+    fig.savefig(out / "Fig4_ambient_trials.pdf")
     plt.close(fig)
-    print("Fig. 3 ok")
+    print("Fig. 4 ok")
 
 
 def main():
@@ -216,22 +171,20 @@ def main():
     ap.add_argument("--out", default="figures")
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    fig1_positioning(out)
+    fig1_perclass(out)
     runs = load_runs(a.repo)
     if runs:
         fig2_latency(runs, out)
-    fig3_ambient(a.repo, out)
-    if runs:
-        fig4_ablation(runs, out)
-    fig5_perclass(out)
-    fig6_selection(out)
+        fig3_ablation(runs, out)
+    fig4_ambient(a.repo, out)
+    fig5_selection(out)
     print("\n输出目录:", out.resolve())
 
 
 
 
-# ------------------------------------------------------------------ Fig. 4
-def fig4_ablation(runs, out):
+# ------------------------------------------------------------------ Fig. 3
+def fig3_ablation(runs, out):
     """十二配置消融：温度 / CPU / leaf / pest 四指标"""
     metrics = [("Pest_Lat_ms", "Mean pest latency (ms)", True),
                ("Leaf_Lat_ms", "Mean leaf latency (ms)", True),
@@ -267,13 +220,13 @@ def fig4_ablation(runs, out):
                    bbox_to_anchor=(-0.02, 1.0), ncol=2, columnspacing=0.8,
                    handlelength=1.1, handletextpad=0.4)
     fig.tight_layout()
-    fig.savefig(out / "Fig4_ablation_summary.png", dpi=DPI)
-    fig.savefig(out / "Fig4_ablation_summary.pdf")
+    fig.savefig(out / "Fig3_ablation_summary.png", dpi=DPI)
+    fig.savefig(out / "Fig3_ablation_summary.pdf")
     plt.close(fig)
-    print("Fig. 4 ok")
+    print("Fig. 3 ok")
 
 
-# ------------------------------------------------------------------ Fig. 5
+# ------------------------------------------------------------------ Fig. 1
 LEAF_AP = [("algal", 254, 0.476), ("leaf_rot", 54, 0.748), ("Phomopsis", 84, 0.650),
            ("pink", 20, 0.439), ("root", 59, 0.474)]
 PEST_AP = [("leafhopper damage", 39, 0.409), ("Psyllid", 539, 0.366),
@@ -283,7 +236,7 @@ PEST_AP = [("leafhopper damage", 39, 0.409), ("Psyllid", 539, 0.366),
 MIN_INST = 15
 
 
-def fig5_perclass(out):
+def fig1_perclass(out):
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.2),
                              gridspec_kw={"width_ratios": [1, 1.25]})
     for ax, data, title, agg in (
@@ -317,14 +270,14 @@ def fig5_perclass(out):
              f"{MIN_INST} instances and are not interpreted as class-level performance.",
              ha="center", fontsize=7, color="0.35")
     fig.tight_layout()
-    fig.savefig(out / "Fig5_per_class_ap.png", dpi=DPI)
-    fig.savefig(out / "Fig5_per_class_ap.pdf")
+    fig.savefig(out / "Fig1_per_class_ap.png", dpi=DPI)
+    fig.savefig(out / "Fig1_per_class_ap.pdf")
     plt.close(fig)
-    print("Fig. 5 ok")
+    print("Fig. 1 ok")
 
 
-# ------------------------------------------------------------------ Fig. 6
-def fig6_selection(out):
+# ------------------------------------------------------------------ Fig. 5
+def fig5_selection(out):
     fig, ax = plt.subplots(figsize=(7.2, 3.5))
     ax.set_xlim(0, 9.15); ax.set_ylim(0, 6.4); ax.axis("off")
 
@@ -370,10 +323,10 @@ def fig6_selection(out):
     ax.text(0.16, 0.02, "Independent of the choice:  sequential rather than concurrent "
             "scheduling (39.0\u201344.3% pest-latency reduction) and Docker containerisation, "
             "both at no measurable cost.", ha="left", va="center", fontsize=6.9, color="0.2")
-    fig.savefig(out / "Fig6_selection_rule.png", dpi=DPI)
-    fig.savefig(out / "Fig6_selection_rule.pdf")
+    fig.savefig(out / "Fig5_selection_rule.png", dpi=DPI)
+    fig.savefig(out / "Fig5_selection_rule.pdf")
     plt.close(fig)
-    print("Fig. 6 ok")
+    print("Fig. 5 ok")
 
 
 if __name__ == "__main__":
