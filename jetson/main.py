@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =========================================================
-# Durian AI – DUAL MODEL (Leaf + Pest) ONNX
+# DualEdge – dual-model (M_L + M_S) ONNX inference with pack-rail telemetry
 # UNIFIED CROSS-PLATFORM SCRIPT
 # Jetson Orin Nano Super & Raspberry Pi 5
 #
@@ -28,7 +28,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ================= PLATFORM DETECTION =================
 # Auto-detect via /etc/os-release or environment hint
-PLATFORM = os.environ.get("DURIAN_PLATFORM", "").lower()
+PLATFORM = (os.environ.get("DUALEDGE_PLATFORM") or os.environ.get("DURIAN_PLATFORM", "")).lower()
 if not PLATFORM:
     try:
         with open("/etc/os-release") as f:
@@ -212,46 +212,21 @@ def get_gpu_load():
         gpu_mhz = 0.0
     return gpu_pct, gpu_mhz
 
-# ================= HELPERS: BATTERY (Jetson + INA219, not RPi5) =================
-def get_battery_data():
-    """
-    Returns (batt_volt_mV, batt_curr_mA, batt_pct, batt_state).
-    On Jetson with I2C INA219 module: reads from /sys/bus/i2c/devices/...
-    On RPi5: no battery module (returns 0/0/0/NA).
-    """
-    if not IS_JETSON:
-        return 0.0, 0.0, 0.0, "N/A"
-    
-    try:
-        import smbus2
-        bus = smbus2.SMBus(1)
-        addr = 0x40  # INA219 default address
-        
-        # Voltage register (0x02): raw_mv = (reading << 3) / 1e6
-        volt_reg = bus.read_word_data(addr, 0x02)
-        batt_volt = (volt_reg >> 3) * 4 / 1000  # in mV
-        
-        # Current register (0x01): mA
-        curr_reg = bus.read_word_data(addr, 0x01)
-        batt_curr = curr_reg / 1000  # in mA (may be negative if discharging)
-        
-        # Estimate % from voltage (12V nominal 11–12V range)
-        batt_pct = max(0, min(100, (batt_volt - 11.0) / (12.0 - 11.0) * 100))
-        
-        # Discharge state from current sign
-        batt_state = "discharging" if batt_curr < -100 else ("charging" if batt_curr > 100 else "idle")
-        
-        bus.close()
-        return batt_volt, batt_curr, batt_pct, batt_state
-    except Exception:
-        return 0.0, 0.0, 0.0, "N/A"
+# ================= HELPERS: BATTERY =================
+# Pack-rail telemetry via the UPS module's I2C monitor. Backend is selected with
+# BATT_BACKEND (see battery_backends.py):
+#   waveshare_ups_hat_e  Raspberry Pi 5 + Waveshare UPS HAT (E): BQ4050 fuel gauge via MCU @0x2D
+#   waveshare_ina219     Jetson Orin + Waveshare UPS Power Module (C): INA219 @0x41,
+#                        SoC = vendor linear voltage map (not a fuel gauge)
+# Returns (volt_mV, curr_mA, pct, state); current negative when discharging.
+from battery_backends import get_battery_data
 
 # ================= STARTUP CHECK =================
 def startup_check():
     passed = True
     print()
     print("=" * 60)
-    print(f"  Durian AI – Dual ONNX  |  {PLATFORM.upper()} Startup")
+    print(f"  DualEdge – dual ONNX  |  {PLATFORM.upper()} start-up")
     print(f"  Schedule mode: {SCHEDULE_MODE.upper()}")
     print(f"  Duty cycle: {'ON (' + str(CYCLE_ACTIVE_SEC) + 's active / ' + str(CYCLE_SLEEP_SEC) + 's sleep)' if DUTY_CYCLE_ENABLED else 'OFF (continuous run)'}")
     print("=" * 60)
@@ -565,7 +540,7 @@ def main():
     else:
         cap = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
 
-    WIN_NAME = "Durian AI"
+    WIN_NAME = "DualEdge"
     if HAS_DISPLAY:
         cv2.namedWindow(WIN_NAME, cv2.WINDOW_NORMAL)
         cv2.setWindowProperty(WIN_NAME, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -674,7 +649,7 @@ def main():
                 cv2.imwrite(img_path, vis_bgr)
                 lines = [f"🍃 {d['disease']}: {d['conf']*100:.1f}%" for d in l_dets]
                 lines += [f"🐛 {d['disease']}: {d['conf']*100:.1f}%" for d in p_dets]
-                msg = (f"🚨 Durian Alert! [{SCHEDULE_MODE}]\n\n" + "\n".join(lines) +
+                msg = (f"🚨 DualEdge detection [{SCHEDULE_MODE}]\n\n" + "\n".join(lines) +
                        f"\n\n🌡️{temp:.1f}°C ⏱️{perf_data['fps']:.1f}FPS")
                 send_telegram(img_path, msg)
                 last_telegram_time = now

@@ -1,95 +1,66 @@
-# Jetson Orin Nano Super — Durian Dual-Model Benchmarking
-
-**Status: ✅ COMPLETE** — All 6 configurations (3 scheduling modes × 2 duty-cycle states) are fully benchmarked with 3-hour runs each.
-
-## Hardware & Environment
+# Jetson Orin Nano Super
 
 - **Device:** Jetson Orin Nano Super Developer Kit
 - **JetPack:** 6.2 (L4T R36.4.4)
-- **Camera:** USB 2K autofocus webcam (MJPG @ 1280×720)
-- **Inference Engine:** ONNX Runtime 1.23.0, CUDAExecutionProvider
-- **Thermal Management:** Hard cutoff at 82°C; duty-cycle throttling via 180s active / 45s sleep
+- **Power mode (`nvpmodel`):** _to be documented_
+- **Camera:** USB 2K autofocus UVC webcam, MJPG @ 1280×720 (identical on both platforms)
+- **Inference:** ONNX Runtime 1.23.0, `CUDAExecutionProvider`, via the Ultralytics ONNX backend
+- **UPS:** Waveshare UPS Power Module (C), 3 × 21700 5,000 mAh; INA219 @0x41, SoC voltage-derived
+- **Cooling:** stock active cooler
+- **Software thermal cut-off:** 82 °C (`MAX_TEMP_LIMIT` in `main.py`)
 
-## Experiment Configuration
+## Configuration
 
 | Parameter | Value |
 |---|---|
-| Leaf Model | YOLOv11s (36.2 MB, 5 classes) |
-| Pest Model | YOLOv11n (10.1 MB, 7 classes) |
-| Inference Resolution | 640×640 |
-| Confidence Threshold | 0.35 |
-| Leaf Inference Interval | 0.8s |
-| Pest Inference Interval | 1.2s |
-| Duty Cycle (when ON) | 180s active, 45s sleep |
-| Run Duration per Config | 3 hours |
-| Telemetry Interval | 0.5s |
+| M_L (`Leaf` in code) | YOLO11s, 36.2 MB, 5 classes |
+| M_S (`Pest` in code) | YOLO11n, 10.1 MB, 7 classes |
+| Input resolution | 640 × 640 |
+| Confidence / NMS IoU | 0.35 / 0.45 |
+| M_L / M_S post-inference sleep | 0.8 s / 1.2 s |
+| Stagger delay | 0.4 s |
+| Duty cycle (capture gate) | 180 s on / 45 s off |
+| Trial length | 3 h |
+| Telemetry interval | 0.5 s |
 
-## Datasets
+## Data
 
-7 CSV files in `data/`:
-- `jetson_sequential_duty.csv` — Sequential mode, duty-cycle ON (~21,340 rows)
-- `jetson_sequential_nonduty.csv` — Sequential mode, continuous (~21,145 rows)
-- `jetson_parallel_duty.csv` — Parallel mode, duty-cycle ON
-- `jetson_parallel_nonduty.csv` — Parallel mode, continuous
-- `jetson_staggered_duty.csv` — Staggered mode, duty-cycle ON
-- `jetson_staggered_nonduty.csv` — Staggered mode, continuous
-- `jetson_battery.csv` — Ambient/outdoor thermal + battery validation (field test)
+Seven CSVs in `data/`: six mains-powered configurations (3 policies × 2 duty
+states, ~21,100–21,600 rows each) and `jetson_battery.csv` (sequential + duty,
+on pack power, outside climate control). Columns are listed in the top-level
+README.
 
-**CSV Format:** 17 columns (GPU and Battery columns populated on Jetson)
-```
-Timestamp, Schedule_Mode, FPS, Leaf_Lat_ms, Pest_Lat_ms,
-CPU_%, RAM_MB, Temp_C, Freq_MHz, GPU_%, GPU_MHz,
-Batt_Voltage_mV, Batt_Current_mA, Batt_Percent, Batt_State,
-Leaf_Detections, Pest_Detections
-```
+## Result summary (per-inference estimator)
 
-## Key Findings
+| | parallel + duty | sequential + duty |
+|---|---|---|
+| M_S latency (ms) | 62.4 | 36.1 |
+| M_S throughput (h⁻¹) | 2817 | 2629 |
+| M_L latency (ms) | 84.6 | 86.3 |
+| M_L throughput (h⁻¹) | 4040 | 2699 |
+| Mean CPU (%) | 8.0 | 6.7 |
+| Mean die temperature (°C) | 49.7 | 48.2 |
 
-Sequential scheduling achieves **~42–44% reduction in pest-model latency** compared to concurrent (parallel/staggered) modes, with corresponding CPU/GPU cache efficiency gains:
+Sequential scheduling reduces M_S latency by 42% at a 7% throughput cost; for M_L
+it is a net loss (latency +2%, throughput −33%). The mechanism on the GPU is not
+instrumented; the paper describes it as shared-resource contention and does not
+extend a cache-exclusivity account to this platform.
 
-| Metric | Parallel | Sequential | Reduction |
-|---|---|---|---|
-| Avg Pest Latency | 62.3 ms | 34.7 ms | 44.3% |
-| Avg Temperature | 49.6 °C | 48.2 °C | 2.8% |
-| Avg CPU % | 8.5% | 6.7% | 21.2% |
-
-This pattern is consistent across duty-cycle ON/OFF states and validates the cache-exclusivity hypothesis.
-
-## Running the Script
-
-Both native and Docker workflows are supported. See [top-level README](../README.md) for full instructions.
-
-### Quick Start (Native)
+## Native install
 
 ```bash
+# Jetson-specific wheels first (see requirements.txt header), then:
 pip3 install -r requirements.txt
-export SCHEDULE_MODE=sequential
-export DUTY_CYCLE_ENABLED=True
-python3 main.py
+SCHEDULE_MODE=sequential DUTY_CYCLE_ENABLED=true python3 main.py
 ```
 
-### Quick Start (Docker with GPU)
+## Docker
+
+Use the vendor-built image; hand-assembly from `l4t-jetpack` fails for the
+reasons recorded in `docker/DOCKER_NOTES.md`.
 
 ```bash
-cp yolov11s.onnx yolov11n.onnx docker/
-cd docker && docker build -t durian-jetson:v1 .
-docker run --rm --runtime nvidia --device=/dev/video0 \
-  -v $(pwd)/../output:/app/output \
-  -e SCHEDULE_MODE=sequential \
-  durian-jetson:v1
+cd docker && sudo docker build -t dualedge-jetson:v1 .
+sudo docker run --rm --runtime nvidia --device /dev/video0 \
+  -v $PWD/../output:/app/output -e SCHEDULE_MODE=sequential dualedge-jetson:v1
 ```
-
-## Platform-Specific Notes
-
-- **GPU Load Reading:** `/sys/devices/platform/17000000.gpu/load` (0–1000, divide by 10 for %)
-- **GPU Frequency:** `/sys/devices/platform/17000000.gpu/devfreq/17000000.gpu/cur_freq` (Hz)
-- **Battery (I2C INA219):** Reads from SMBus at address 0x40; requires Python `smbus2` library
-- **Camera Interface:** Defaults to USB with V4L2 backend + MJPG format (see `main.py` for fallback CSI/Argus path)
-
-## Cross-Platform Validation
-
-See [top-level README](../README.md) and run `python3 compare_platforms.py` from repo root to compare Jetson results against Raspberry Pi 5.
-
----
-
-**For Docker troubleshooting and GPU/container setup details, see [`docker/DOCKER_NOTES.md`](docker/DOCKER_NOTES.md).**

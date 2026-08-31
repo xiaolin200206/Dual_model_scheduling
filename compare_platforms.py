@@ -91,7 +91,7 @@ def main():
         return
     
     print("\n" + "="*100)
-    print("  Durian Dual-Model Edge Inference – Cross-Platform Comparison")
+    print("  DualEdge – cross-platform comparison")
     print("  Jetson Orin Nano Super (CUDA) vs. Raspberry Pi 5 (CPU)")
     print("="*100 + "\n")
 

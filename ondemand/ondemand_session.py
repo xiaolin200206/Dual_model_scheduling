@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # =========================================================
-# Durian AI - ON-DEMAND INSPECTION SESSION (complete)
+# DualEdge - OPERATOR-TRIGGERED SESSION (instrumentation for future work)
 # Jetson Orin Nano Super & Raspberry Pi 5
 #
-# Simulates the deployment mode the paper argues for: an operator
-# triggers an inspection on a suspect leaf, waits for the verdict,
-# then walks on (idle). Measures per-event end-to-end verdict
+# Simulates the operator-triggered deployment mode: an operator
+# triggers one inference of each model, waits for the verdict,
+# then the node idles. Measures per-event end-to-end verdict
 # latency and continuous telemetry, then computes per-session
 # energy under the REAL intermittent duty pattern.
 #
@@ -16,8 +16,8 @@
 #          Scale_insect, Stem-borer, weevil, weevil_damage
 #
 # Run a session:
-#   DURIAN_PLATFORM=rpi5   SESSION_MIN=60 python3 ondemand_session.py
-#   DURIAN_PLATFORM=jetson SESSION_MIN=60 python3 ondemand_session.py
+#   DUALEDGE_PLATFORM=rpi5   SESSION_MIN=60 python3 ondemand_session.py
+#   DUALEDGE_PLATFORM=jetson SESSION_MIN=60 python3 ondemand_session.py
 # Manual triggering (press Enter per inspection):
 #   TRIGGER_MODE=manual python3 ondemand_session.py
 # Re-analyze existing CSVs without running a session:
@@ -37,7 +37,7 @@ import psutil
 from datetime import datetime
 
 # ================= PLATFORM DETECTION (same logic as main.py) =================
-PLATFORM = os.environ.get("DURIAN_PLATFORM", "").lower()
+PLATFORM = (os.environ.get("DUALEDGE_PLATFORM") or os.environ.get("DURIAN_PLATFORM", "")).lower()
 if not PLATFORM:
     PLATFORM = "jetson" if os.path.exists("/sys/devices/platform/17000000.gpu") else "rpi5"
 IS_JETSON = PLATFORM == "jetson"

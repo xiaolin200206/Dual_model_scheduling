@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this framework or telemetry, please cite the paper."
+title: "DualEdge: characterising battery-powered dual-model edge inference"
+authors:
+  - family-names: Lin
+    given-names: Ding Shan
+    affiliation: "Institute of Computer Science and Digital Innovation, UCSI University"
+repository-code: "https://github.com/xiaolin200206/Dual_model_scheduling"
+license: MIT
+preferred-citation:
+  type: article
+  title: "Characterising battery-powered dual-model edge inference: an open framework and a two-platform ARM study of scheduling, energy and cost"
+  authors:
+    - family-names: Lin
+      given-names: Ding Shan
+  year: 2026
+  journal: "(under review)"

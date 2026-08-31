@@ -268,7 +268,7 @@ sudo docker run --rm --runtime nvidia -it \
 
 # 4. Build our image on top of it (run from repo root, models must be
 #    copied next to the Dockerfile first — see README.md)
-cd docker && sudo docker build -t durian-jetson:test .
+cd docker && sudo docker build -t dualedge-jetson:test .
 
 # 5. Run a full experiment, with output volume-mounted and secrets
 #    passed as env vars, in a detached tmux session so SSH disconnects
@@ -278,6 +278,6 @@ timeout 10800 sudo docker run --rm --runtime nvidia --device=/dev/video0 \
   -v ~/docker_build/output:/app/output \
   -e TELEGRAM_BOT_TOKEN="..." -e TELEGRAM_CHAT_ID="..." \
   -e SCHEDULE_MODE="sequential" -e DUTY_CYCLE_ENABLED="True" \
-  durian-jetson:test python3 main.py 2>&1 | tee ~/docker_build/run_log.txt
+  dualedge-jetson:test python3 main.py 2>&1 | tee ~/docker_build/run_log.txt
 # Ctrl+B then D to detach
 ```
