@@ -34,7 +34,7 @@ Headline results, all regenerable from the CSVs in this repository:
 │   ├── main.py                     capture, dual-model scheduling, telemetry
 │   ├── battery_backends.py         UPS monitor accessors (identical on both)
 │   ├── docker/                     Dockerfile (+ DOCKER_NOTES.md on Jetson)
-│   ├── data/                       7 CSV each: 6 configurations + 1 battery trial
+│   ├── data/                       8 CSV each: 6 configurations + docker + battery
 │   └── analysis/summarize_results.py
 ├── compare_platforms.py            side-by-side summary of all configurations
 ├── reproduce/
@@ -124,6 +124,7 @@ different numbers.
 | `*_parallel_duty.csv` / `_nonduty` | two worker threads, zero start offset |
 | `*_staggered_duty.csv` / `_nonduty` | two threads, M_S delayed 0.4 s at start |
 | `*_sequential_duty.csv` / `_nonduty` | one thread, M_L then M_S per frame |
+| `*_docker_sequential_duty.csv` | sequential + duty, inside a container |
 | `*_battery.csv` | sequential + duty, on pack power, outside climate control |
 
 `_duty` = capture gated 180 s on / 45 s off; `_nonduty` = continuous capture.
@@ -153,9 +154,9 @@ not yet been re-run on the device; the I2C bus number and address
 
 ## Known gaps
 
-- **Containerisation-trial CSVs** (paper Table 4) are not yet in `data/`; they will
-  be added before publication.
-- Jetson trials: power mode (`nvpmodel`) to be documented here and in the paper.
+- The Jetson `nvpmodel` power mode in force during the trials was not recorded.
+  Logged GPU clocks alternate between the 306 MHz idle and 714 MHz active
+  operating points, consistent with a mode below MAXN SUPER.
 
 ## Limitations
 
