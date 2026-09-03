@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+output/
+runs/
+*.onnx
+.DS_Store
