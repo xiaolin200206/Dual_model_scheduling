@@ -13,12 +13,13 @@ find_dataset.py — 扫描目录, 找出和两个部署 ONNX 类名完全匹配�
 """
 
 import sys
+import os
 from pathlib import Path
 
 # ============================ CONFIG ============================
 
 # 截图里那个总目录 (含 Detection_leaf_disease / Detection_pest_disease 等):
-ROOT = Path(r"C:\Users\Lim Ding Shan\Desktop\Durian project and paper")  # <-- 按实际改
+ROOT = Path(os.environ.get("DATASET_ROOT", "."))  # root of the (unreleased) image datasets
 
 MAX_DEPTH = 4          # 递归深度, 够用了; 找不到就调大
 

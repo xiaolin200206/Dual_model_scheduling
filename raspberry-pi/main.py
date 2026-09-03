@@ -465,10 +465,10 @@ def monitor_worker():
                 f"{perf_data['freq']:.0f}",
                 f"{perf_data['gpu_pct']:.1f}" if IS_JETSON else "0.0",
                 f"{perf_data['gpu_mhz']:.0f}" if IS_JETSON else "0.0",
-                f"{perf_data['batt_volt']:.0f}" if IS_JETSON else "0",
-                f"{perf_data['batt_curr']:.0f}" if IS_JETSON else "0",
-                f"{perf_data['batt_pct']:.0f}" if IS_JETSON else "0",
-                perf_data['batt_state'] if IS_JETSON else "N/A",
+                f"{perf_data['batt_volt']:.0f}",
+                f"{perf_data['batt_curr']:.0f}",
+                f"{perf_data['batt_pct']:.0f}",
+                perf_data['batt_state'],
                 "|".join(l_dets) if l_dets else "None",
                 "|".join(p_dets) if p_dets else "None",
             ])
@@ -559,7 +559,14 @@ def main():
     else:
         raise ValueError(f"Unknown SCHEDULE_MODE: {SCHEDULE_MODE}")
 
-    for t in worker_threads:
+    # Optional ready-state baseline: log pack-rail telemetry with both models loaded,
+    # camera open and no inference issued, before the inference workers start.
+    IDLE_BASELINE_SEC = float(os.environ.get("IDLE_BASELINE_SEC", "0"))
+    worker_threads[0].start()   # monitor_worker only
+    if IDLE_BASELINE_SEC > 0:
+        print(f"[IDLE BASELINE] logging {IDLE_BASELINE_SEC:.0f}s of telemetry before inference starts")
+        time.sleep(IDLE_BASELINE_SEC)
+    for t in worker_threads[1:]:
         t.start()
 
     print(f"🟢 Running [{SCHEDULE_MODE.upper()}] (CONF={CONF_THRESH}, "
@@ -606,7 +613,20 @@ def main():
                     continue
             else:
                 ret, frame_bgr = cap.read()
-                if not ret: break
+                if not ret:
+                    # A single failed USB read (observed on resumption from a duty pause)
+                    # must not end the trial: retry, re-open after 10, give up after 100.
+                    read_fail = globals().get('_read_fail', 0) + 1
+                    globals()['_read_fail'] = read_fail
+                    if read_fail % 10 == 0:
+                        print(f"[CAM] read failed x{read_fail}, reopening"); cap.release()
+                        cap = cv2.VideoCapture(USB_CAMERA_INDEX, cv2.CAP_V4L2)
+                        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+                        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280); cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+                    if read_fail >= 100:
+                        print("[CAM] giving up after 100 consecutive failures"); break
+                    time.sleep(0.1); continue
+                globals()['_read_fail'] = 0
                 frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
             current_frame = frame_rgb

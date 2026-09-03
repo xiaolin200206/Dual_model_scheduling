@@ -1,8 +1,8 @@
 # DualEdge: characterising battery-powered dual-model edge inference
 
-Code, raw telemetry and analysis for the study *"Characterising battery-powered
-dual-model edge inference: an open framework and a two-platform ARM study of
-scheduling, energy and cost."*
+Code, raw telemetry and analysis for the study *"Idle power, not inference, sets the
+energy per unit of work of a battery-powered dual-detector edge node: a pack-rail
+characterisation on Raspberry Pi 5 and Jetson Orin Nano Super"* (under review).
 
 **DualEdge** is a small, platform-agnostic framework for measuring what a
 multi-model inference node actually costs at the battery rail. One runtime runs two
@@ -22,8 +22,13 @@ Headline results, all regenerable from the CSVs in this repository:
   60 W h pack, endurance is 5.1 h vs 7.3 h, and energy per cycle is 4.44 vs
   4.20 mW h — a 5× latency advantage that buys no energy advantage per unit of work.
 - A two-state decomposition of the pack trace shows why: the Jetson idles at
-  11.4 W for 91% of wall time, so all inference-runtime optimisation together is
-  worth at most ~12% of energy per cycle on this node.
+  ~11 W for 91% of wall time (its instantaneous pack power never falls below
+  10.88 W), so all inference-runtime optimisation together is worth 12–15% of
+  energy per cycle on this node.
+- Measured per policy on one discharge (Raspberry Pi 5): sequential scheduling draws
+  9% less power than the concurrent policies but costs 10–25% *more* energy per
+  inference, because it does less work on the same idle floor. A directly measured
+  ready-state baseline is 3.6–4.1 W.
 - Docker costs nothing measurable at run time on either platform.
 
 ## Repository structure
@@ -35,18 +40,21 @@ Headline results, all regenerable from the CSVs in this repository:
 │   ├── battery_backends.py         UPS monitor accessors (identical on both)
 │   ├── docker/                     Dockerfile (+ DOCKER_NOTES.md on Jetson)
 │   ├── data/                       8 CSV each: 6 configurations + docker + battery
+│   │   └── policy_battery/         (Pi only) 3 × 1 h pack-powered runs, one per policy
 │   └── analysis/summarize_results.py
 ├── compare_platforms.py            side-by-side summary of all configurations
 ├── reproduce/
-│   └── make_figures.py             regenerate Figs. 1–4 from the telemetry
+│   └── make_figures.py             regenerate Figs. 1–4 (Fig. 1 battery trials, Fig. 2 energy floor,
+│                                   Fig. 3 latency distributions, Fig. 4 throughput–latency)
 ├── analysis/
-│   └── two_state_decomposition.py  idle / inferring split, energy floor, crossover
+│   ├── two_state_decomposition.py  idle / inferring split, energy floor, crossover
+│   └── rpi5_policy_energy.py       per-policy pack energy + ready-state baseline (Table 4)
 ├── ondemand/
 │   └── ondemand_session.py         instrumented operator-triggered session (future work)
 ├── figures/                        Figs. 1–4 at 300 dpi (PNG + PDF)
-├── legacy/                         dataset-audit and mAP tooling for the deployed
-│   ├── audit/ , accuracy/          weights; not used by any result in the paper
-├── all_csv.zip                     the same 14 CSVs, zipped
+├── audit/ , accuracy/              dataset-audit and mAP tooling for the deployed
+│                                   weights; not used by any result in the paper
+├── all_csv.zip                     all 19 CSVs, zipped
 ├── CITATION.cff
 └── LICENSE                         MIT
 ```
@@ -82,6 +90,7 @@ Environment variables:
 |---|---|---|
 | `SCHEDULE_MODE` | `parallel` / `staggered` / `sequential` | co-location policy (Section 3.2 of the paper) |
 | `DUTY_CYCLE_ENABLED` | `true` / `false` | gate **frame capture** for 45 s in every 225 s; inference workers keep running |
+| `IDLE_BASELINE_SEC` | seconds (default 0) | log a ready-state baseline (models loaded, camera open, no inference) before the workers start |
 | `DUALEDGE_PLATFORM` (or legacy `DURIAN_PLATFORM`) | `rpi5` / `jetson` | override platform auto-detection |
 | `LEAF_MODEL_PATH`, `PEST_MODEL_PATH` | path | ONNX files for M_L and M_S |
 | `BATT_BACKEND`, `BATT_I2C_BUS` | see Battery instrumentation | pack-rail monitor |
@@ -104,7 +113,8 @@ fails.
 ```bash
 python compare_platforms.py                          # Table 1 summary
 python reproduce/make_figures.py --repo . --out figures/
-python analysis/two_state_decomposition.py           # Tables 5–6, Fig. 4 numbers
+python analysis/two_state_decomposition.py           # Table 2 (residual decomposition), Fig. 2 numbers
+python analysis/rpi5_policy_energy.py                # Table 4 and the ready-state baseline of Section 5.2
 ```
 
 Every number in the paper's Sections 5–6 regenerates from `*/data/*.csv`. Note the
@@ -171,3 +181,23 @@ that reason.
 ## Licence
 
 See `LICENSE`. Please cite the paper if you use the framework or the telemetry.
+
+## Changelog
+
+**v2 (September 2026)**
+- `main.py`: the telemetry writer wrote the four `Batt_*` columns only when `IS_JETSON`
+  was true, so the released runtime could not reproduce `raspberry_battery.csv` (which
+  was logged with an earlier Pi-specific build). Fixed: battery columns are written on
+  every platform whose backend returns data.
+- `main.py`: a single failed USB frame read ended the run. Now retries, re-opens the
+  camera after 10 consecutive failures and gives up after 100.
+- `main.py`: `IDLE_BASELINE_SEC` added (ready-state baseline before inference starts).
+- New data: `raspberry-pi/data/policy_battery/` (three 1 h pack-powered runs, one per
+  policy, plus the aborted first staggered attempt, the launcher log and the package
+  versions) and `analysis/rpi5_policy_energy.py`.
+- Figures renumbered to match the manuscript (battery trials → Fig. 1, energy floor →
+  Fig. 2, latency distributions → Fig. 3, throughput–latency → Fig. 4).
+- `legacy/` merged into `audit/` and `accuracy/`; dataset roots are read from
+  `DATASET_ROOT` instead of an absolute path.
+- Known gap: the mains-powered Jetson logs predate the `GPU_%` / `GPU_MHz` columns; only
+  `jetson_battery.csv` has them.

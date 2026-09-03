@@ -8,8 +8,7 @@ run_model_eval.py — 评估部署用的两个 ONNX 模型 (完整版, 路径已
 本版新增 (相对上一版):
   1. 路径已按调查结论填好, 开箱即跑
   2. pest 评估集自动做泄漏检查 (对照同目录下的 train)
-  3. 小样本类标记, 并给出剔除小样本类后的 mAP —— 与 Paper4 处理
-     Scale Insect / Weevil / Stem-borer 的规格一致
+  3. 小样本类标记, 并给出剔除小样本类后的 mAP —— 小样本类单独标记
   4. 报告末尾直接输出论文表格行与可粘贴的方法学描述
 
 用法:
@@ -27,11 +26,12 @@ import json
 import sys
 import tempfile
 from collections import Counter
+import os
 from pathlib import Path
 
 # ============================ CONFIG ============================
 
-BASE      = Path(r"C:\Users\Lim Ding Shan\Desktop\Durian project and paper")
+BASE = Path(os.environ.get("DATASET_ROOT", "."))  # root of the (unreleased) image datasets
 MODEL_DIR = BASE / "Fifth paper" / "model"
 
 TASKS = {

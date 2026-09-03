@@ -28,7 +28,7 @@ for ax,title,key in zip(axes,['Small model $M_S$ (YOLO11n)','Large model $M_L$ (
     ax.set_yscale('log'); ax.set_xticklabels(labels,fontsize=6.4); ax.set_ylabel('Per-inference latency (ms, log scale)',fontsize=8.5); ax.set_title(title,fontsize=9.5,pad=6)
     ax.grid(axis='y',ls=':',lw=0.5,color='0.75',alpha=0.7); ax.set_axisbelow(True); ax.axvline(6.5,color='0.5',lw=0.9,ls='--')
     ax.text(3.5,ax.get_ylim()[1]*0.72,'Raspberry Pi 5',ha='center',fontsize=7.5,color=C_RPI,fontweight='bold'); ax.text(9.5,ax.get_ylim()[1]*0.72,'Jetson Orin Nano Super',ha='center',fontsize=7.5,color=C_JET,fontweight='bold')
-fig.tight_layout(); fig.savefig(OUT/'Fig1_latency_distributions.png',dpi=300); plt.close(fig)
+fig.tight_layout(); fig.savefig(OUT/'Fig3_latency_distributions.png',dpi=300); plt.close(fig)
 # Fig 2 throughput vs latency
 fig,axes=plt.subplots(1,2,figsize=(7.2,3.2)); mk={'sequential':'o','parallel':'s','staggered':'^'}
 for (plat,m,d),df in runs.items():
@@ -39,7 +39,7 @@ for ax,t in zip(axes,['Small model $M_S$','Large model $M_L$']):
     ax.set_xscale('log'); ax.set_xlabel('Mean per-inference latency (ms, log)',fontsize=8); ax.set_ylabel('Achieved throughput (inferences h$^{-1}$)',fontsize=8); ax.set_title(t,fontsize=9); ax.grid(ls=':',lw=0.5,color='0.8'); ax.set_axisbelow(True); ax.tick_params(labelsize=7)
 h=[Line2D([],[],marker='o',ls='',color='0.3',label='sequential'),Line2D([],[],marker='s',ls='',color='0.3',label='parallel'),Line2D([],[],marker='^',ls='',color='0.3',label='staggered'),Line2D([],[],marker='o',ls='',markerfacecolor='0.3',markeredgecolor='0.3',label='duty-cycled'),Line2D([],[],marker='o',ls='',markerfacecolor='white',markeredgecolor='0.3',label='continuous'),Line2D([],[],marker='s',ls='',color=C_RPI,label='Raspberry Pi 5'),Line2D([],[],marker='s',ls='',color=C_JET,label='Jetson Orin Nano Super')]
 axes[0].legend(handles=h,fontsize=6,frameon=False,loc='lower left',ncol=2)
-fig.tight_layout(); fig.savefig(OUT/'Fig2_throughput_latency.png',dpi=300); plt.close(fig)
+fig.tight_layout(); fig.savefig(OUT/'Fig4_throughput_latency.png',dpi=300); plt.close(fig)
 # Fig 3 battery 4-panel
 rp=load(R/'raspberry-pi/data/raspberry_battery.csv'); jt=load(R/'jetson/data/jetson_battery.csv')
 fig,axes=plt.subplots(2,2,figsize=(7.2,5.0))
@@ -55,11 +55,11 @@ axes[1,0].set_ylabel('Discharge current (mA)',fontsize=8); axes[1,0].set_title('
 axes[1,1].set_xlabel('Cycles completed (one inference of each model)',fontsize=8); axes[1,1].set_ylabel('Cumulative energy (W h)',fontsize=8); axes[1,1].set_title('(d) Energy against work done',fontsize=9)
 for ax in (axes[0,0],axes[0,1],axes[1,0]): ax.set_xlabel('Elapsed time (min)',fontsize=8)
 for ax in axes.flat: ax.grid(ls=':',lw=0.5,color='0.8'); ax.set_axisbelow(True); ax.tick_params(labelsize=7)
-fig.tight_layout(); fig.savefig(OUT/'Fig3_battery_trials.png',dpi=300); plt.close(fig)
+fig.tight_layout(); fig.savefig(OUT/'Fig1_battery_trials.png',dpi=300); plt.close(fig)
 # Fig 4 energy floor
 k=np.logspace(0,np.log10(32),200); fig,ax=plt.subplots(figsize=(4.6,3.0))
 for lab,c,idle,inf,over,comp in (('Raspberry Pi 5',C_RPI,7.50,9.66,1.213,0.622),('Jetson Orin Nano Super',C_JET,11.36,15.37,1.245,0.121)):
     ax.plot(k,(idle*over+inf*comp/k)/3.6,color=c,lw=1.4,label=lab); ax.axhline(idle*over/3.6,color=c,ls=':',lw=0.9)
 ax.axvline(1.89,color='0.4',ls='--',lw=0.8); ax.text(1.95,4.47,'Jetson crosses\nRPi 5 at 1.9×',fontsize=6.5,color='0.3')
 ax.set_xscale('log'); ax.set_xlabel('Inference-runtime speed-up (×)',fontsize=8); ax.set_ylabel('Energy per cycle (mW h)',fontsize=8); ax.set_xticks([1,2,4,8,16,32]); ax.set_xticklabels(['1','2','4','8','16','32']); ax.legend(fontsize=6.5,frameon=False); ax.grid(ls=':',lw=0.5,color='0.8'); ax.tick_params(labelsize=7)
-fig.tight_layout(); fig.savefig(OUT/'Fig4_energy_floor.png',dpi=300); plt.close(fig); print('ok')
+fig.tight_layout(); fig.savefig(OUT/'Fig2_energy_floor.png',dpi=300); plt.close(fig); print('ok')

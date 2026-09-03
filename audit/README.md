@@ -1,8 +1,6 @@
 # Dataset-integrity audit
 
-The procedure applied here originates in Lin (2026a) and its released script
-(github.com/xiaolin200206/Edge-Disease-Inference-Engine, `audit/`). Two signals
-recover source grouping across a partition boundary:
+Two signals recover source grouping across a partition boundary:
 
 1. **Export stem.** Roboflow exports are `<original-stem>_jpg.rf.<uuid>.jpg`; the
    text before `.rf.` is the pre-export filename, so two exports of one source

@@ -102,7 +102,7 @@ def fig1_latency(runs, out):
         ax.text(3.5, ax.get_ylim()[1] * 0.72, "Raspberry Pi 5", ha="center", fontsize=7.5, color=C_RPI, fontweight="bold")
         ax.text(9.5, ax.get_ylim()[1] * 0.72, "Jetson Orin Nano Super", ha="center", fontsize=7.5, color=C_JET, fontweight="bold")
     fig.tight_layout()
-    save(fig, out, "Fig1_latency_distributions")
+    save(fig, out, "Fig3_latency_distributions")
 
 
 def fig2_throughput(runs, out):
@@ -130,7 +130,7 @@ def fig2_throughput(runs, out):
                Line2D([], [], marker="s", ls="", color=C_JET, label="Jetson Orin Nano Super")]
     axes[0].legend(handles=handles, fontsize=6, frameon=False, loc="lower left", ncol=2)
     fig.tight_layout()
-    save(fig, out, "Fig2_throughput_latency")
+    save(fig, out, "Fig4_throughput_latency")
 
 
 def fig3_battery(repo, out):
@@ -162,7 +162,7 @@ def fig3_battery(repo, out):
     for ax in axes.flat:
         ax.grid(ls=":", lw=0.5, color="0.8"); ax.set_axisbelow(True); ax.tick_params(labelsize=7)
     fig.tight_layout()
-    save(fig, out, "Fig3_battery_trials")
+    save(fig, out, "Fig1_battery_trials")
 
 
 def fig4_energy_floor(decomp, out):
@@ -189,7 +189,7 @@ def fig4_energy_floor(decomp, out):
     ax.set_xticks([1, 2, 4, 8, 16, 32]); ax.set_xticklabels(["1", "2", "4", "8", "16", "32"])
     ax.legend(fontsize=6.5, frameon=False); ax.grid(ls=":", lw=0.5, color="0.8"); ax.tick_params(labelsize=7)
     fig.tight_layout()
-    save(fig, out, "Fig4_energy_floor")
+    save(fig, out, "Fig2_energy_floor")
 
 
 def main():

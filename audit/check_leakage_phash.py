@@ -17,10 +17,11 @@ check_leakage_phash.py — 用感知哈希复查泄漏 (字节哈希查不出重
 """
 
 import re
+import os
 from pathlib import Path
 from collections import defaultdict
 
-BASE = Path(r"C:\Users\Lim Ding Shan\Desktop\Durian project and paper")
+BASE = Path(os.environ.get("DATASET_ROOT", "."))  # root of the (unreleased) image datasets
 
 SPLITS = {
     "A/valid": BASE / "Combined_model" / "Leaf" / "_merged" / "valid",

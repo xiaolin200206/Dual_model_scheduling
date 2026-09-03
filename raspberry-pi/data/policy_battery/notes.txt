@@ -1,0 +1,24 @@
+2026-09-03 17:16:19  START parallel  batt=16.60V -264mA 93% discharging
+2026-09-03 18:17:19  END   parallel  batt=16.17V -558mA 81% discharging
+2026-09-03 18:17:49  START staggered  batt=16.21V -266mA 81% discharging
+2026-09-03 18:46:35  END   staggered  batt=16.10V -603mA 75% discharging
+2026-09-03 18:47:05  START sequential  batt=16.18V -279mA 75% discharging
+2026-09-03 19:48:05  END   sequential  batt=15.72V -576mA 64% discharging
+2026-09-03 19:48:35  ALL DONE
+total 1900
+drwxrwxr-x  5 raspberry raspberry   4096 Sep  3 18:47 .
+drwx------ 24 raspberry raspberry   4096 Sep  3 17:16 ..
+drwxrwxr-x  7 raspberry raspberry   4096 Sep  3 18:48 detections
+drwxrwxr-x  2 raspberry raspberry   4096 Sep  3 17:15 dryrun
+-rw-rw-r--  1 raspberry raspberry 754564 Sep  3 18:17 dual_parallel_dutycycle_20260903_171621.csv
+-rw-rw-r--  1 raspberry raspberry 769483 Sep  3 19:48 dual_sequential_dutycycle_20260903_184707.csv
+-rw-rw-r--  1 raspberry raspberry 358354 Sep  3 18:46 dual_staggered_dutycycle_20260903_181751.csv
+-rw-rw-r--  1 raspberry raspberry   1151 Sep  3 17:16 log_parallel_20260903_1716.txt
+-rw-rw-r--  1 raspberry raspberry   1251 Sep  3 19:04 log_sequential_20260903_1847.txt
+-rw-rw-r--  1 raspberry raspberry   2788 Sep  3 18:46 log_staggered_20260903_1817.txt
+-rw-rw-r--  1 raspberry raspberry    468 Sep  3 19:48 notes.txt
+-rw-rw-r--  1 raspberry raspberry    234 Sep  3 18:46 run_all.out
+drwxrwxr-x  2 raspberry raspberry   4096 Sep  3 18:47 .test
+-rw-rw-r--  1 raspberry raspberry    305 Sep  3 17:16 versions_rpi5_20260903.txt
+2026-09-03 20:18:56  RERUN staggered (first run aborted at 29 min: cap.read() returned False on duty resume)  batt=15.65V -242mA 62% discharging
+2026-09-03 21:19:56  END staggered rerun

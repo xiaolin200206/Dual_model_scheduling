@@ -16,7 +16,7 @@ is byte-identical on both platforms.
 
 ## Data
 
-Seven CSVs in `data/`: six mains-powered configurations (~21,200–21,500 rows
+Seven CSVs in `data/` plus three per-policy battery runs in `data/policy_battery/` (see its README): six mains-powered configurations (~21,200–21,500 rows
 each) and `raspberry_battery.csv` (sequential + duty, on pack power, outside
 climate control). Note: the battery trial ran at ~8.3 FPS camera capture against
 ~16.5 FPS in the mains-powered trials, so its latencies are not directly

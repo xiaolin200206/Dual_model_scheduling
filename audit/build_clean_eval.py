@@ -18,9 +18,10 @@ build_clean_eval.py — 从 B/valid 剔除所有与任一 train 集重叠的图,
 import re
 import shutil
 from collections import Counter
+import os
 from pathlib import Path
 
-BASE = Path(r"C:\Users\Lim Ding Shan\Desktop\Durian project and paper")
+BASE = Path(os.environ.get("DATASET_ROOT", "."))  # root of the (unreleased) image datasets
 
 SOURCE = BASE / "six paper" / "_refair_eval" / "leaf_1280" / "valid"   # B/valid
 TRAIN_SETS = [

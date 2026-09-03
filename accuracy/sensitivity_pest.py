@@ -1,21 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-sensitivity_pest.py — 定位 Paper5 实测 (mAP50=0.451) 与 Paper4 已报
-                      (mAP50=0.495) 之间差异的来源
+sensitivity_pest.py — sweep the evaluation settings (NMS IoU, confidence, weight
+format, input size, partition, rect/augment) that move the small model's mAP@0.5,
+and report a table of the result for each combination.
 
-Paper4 送审中不可改, 因此必须弄清两个数字的关系, 否则同一模型两篇论文
-两个精度。本脚本把所有可能造成差异的变量逐一扫一遍:
+Requires the unreleased dataset and weights; set DATASET_ROOT.
 
-  A. NMS IoU        : 0.5 / 0.6 (ultralytics 默认) / 0.7 (Paper5 用的)
-  B. 权重格式       : .onnx (部署) vs .pt (训练检查点, 若存在)
-  C. conf 阈值      : 0.001 (mAP 标准) vs 0.25 vs 0.35 (部署阈值)
-  D. 输入尺寸       : 640 vs 1280 (若 Paper4 用过其它尺寸)
-  E. 评估划分       : valid / test / train (若存在多个划分)
-  F. rect / augment : ultralytics 的两个会影响数值的开关
-
-输出一张对照表, 并自动标出最接近 0.495 的组合。
-
-用法:
+Usage:
     pip install ultralytics
     python sensitivity_pest.py
 """
@@ -26,19 +17,20 @@ import json
 import sys
 import tempfile
 import warnings
+import os
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
 # ============================ CONFIG ============================
 
-BASE      = Path(r"C:\Users\Lim Ding Shan\Desktop\Durian project and paper")
+BASE = Path(os.environ.get("DATASET_ROOT", "."))  # root of the (unreleased) image datasets
 MODEL_DIR = BASE / "Fifth paper" / "model"
 PEST_ROOT = BASE / "paepr4 data" / "pest dataset" / "pest_dataset_merged"
 
-# 要对照的目标值 (Paper4 已报)
+# Reference value to locate in the sweep (optional)
 TARGET_MAP50 = 0.495
-TARGET_NOTE  = "Paper4 reported mAP@0.5 = 0.495 (excl. sparse classes: 0.49)"
+TARGET_NOTE  = "the reference value reported mAP@0.5 = 0.495 (excl. sparse classes: 0.49)"
 
 # 权重候选: ONNX 必有; .pt 若在别处, 补进来
 WEIGHTS = [MODEL_DIR / "yolov11n_pest.onnx"]
@@ -120,7 +112,7 @@ def main():
     splits = available_splits()
     print("可用划分:", ", ".join(f"{s} ({n} 张)" for s, n in splits))
     grid_splits = [s for s, _ in splits if s in GRID["split"]] or [splits[0][0]]
-    # 若存在 test, 也纳入 (Paper4 可能用的是 test)
+    # 若存在 test, 也纳入 (the reference value 可能用的是 test)
     for s, _ in splits:
         if s == "test" and s not in grid_splits:
             grid_splits.append(s)
@@ -129,7 +121,7 @@ def main():
     for w in WEIGHTS:
         print(f"  {w.name}")
     if len(WEIGHTS) == 1:
-        print("  (未找到 .pt — 若 Paper4 评估的是训练检查点, 把它的路径加进 WEIGHTS)")
+        print("  (未找到 .pt — 若 the reference value 评估的是训练检查点, 把它的路径加进 WEIGHTS)")
 
     combos = list(itertools.product(WEIGHTS, grid_splits, GRID["imgsz"],
                                     GRID["conf"], GRID["iou"], GRID["rect"]))
@@ -172,14 +164,14 @@ def main():
 
     if results and results[0][0] < 0.01:
         print("\n=> 找到几乎吻合的配置: 差异来自评估设置而非模型或数据。")
-        print("   Paper5 中注明所用设置即可, 两篇不冲突。")
+        print("   this study 中注明所用设置即可, 两篇不冲突。")
     elif results:
         best = results[0]
         print(f"\n=> 所有配置都无法复现 {TARGET_MAP50}, 最接近的差 {best[0]:.4f}。")
-        print("   差异可能来自: (a) Paper4 用的是另一份评估划分或更早的权重;")
-        print("   (b) Paper4 的数字来自训练日志的 best epoch 而非独立验证;")
-        print("   (c) 权重在 Paper4 之后重训过 (对照 model_report 的导出日期)。")
-        print("   建议翻 Paper4 当时的 runs/ 目录或评估脚本确认。")
+        print("   差异可能来自: (a) the reference value 用的是另一份评估划分或更早的权重;")
+        print("   (b) the reference value 的数字来自训练日志的 best epoch 而非独立验证;")
+        print("   (c) 权重在 the reference value 之后重训过 (对照 model_report 的导出日期)。")
+        print("   建议翻 the reference value 当时的 runs/ 目录或评估脚本确认。")
 
     print(f"\n已保存: {OUT_CSV}")
 
