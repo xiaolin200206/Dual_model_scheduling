@@ -3,7 +3,7 @@ battery_backends.py — drop-in replacement for get_battery_data() in main.py.
 
 Select the backend with an environment variable:
 
-    BATT_BACKEND=waveshare_ups_hat_e # Waveshare UPS HAT (E) on Raspberry Pi 5: BQ4050 fuel gauge via MCU @0x2D
+    BATT_BACKEND=waveshare_ups_hat_e # Waveshare UPS HAT (E) on Raspberry Pi 5: coulomb-counting gauge via MCU @0x2D
     BATT_BACKEND=waveshare_ina219    # Waveshare UPS Power Module (C) on Jetson Orin: INA219 @0x41,
                                      #   SoC = vendor linear voltage map (NOT a fuel gauge)
     BATT_BACKEND=sbs                 # SMBus smart battery at 0x0b (V, I, SoC)
@@ -120,7 +120,11 @@ def _read_waveshare_ina219():
 
 
 # ---------------------------------------------------------------- Waveshare UPS HAT (E) — Raspberry Pi 5
-# MCU at 0x2D exposing the BQ4050 fuel gauge. True state of charge from the gauge.
+# MCU at 0x2D exposing a coulomb-counting gauge. True state of charge from the gauge.
+# The vendor publishes neither a part number nor a schematic for this gauge; it is
+# identified by behaviour (SoC tracks integrated current, not terminal voltage).
+# WARNING: register 0x02 is UNPOPULATED on this board -- it reads 0x00 while the
+# pack discharges. Its charge-state bit must not be trusted. See ERRATA.md.
 # Register map: https://www.waveshare.com/wiki/UPS_HAT_(E)_Register
 def _read_waveshare_ups_hat_e():
     b = _bus(); a = int(os.environ.get("BATT_HAT_ADDR", "0x2d"), 16)

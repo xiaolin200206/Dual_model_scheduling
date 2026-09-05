@@ -1,8 +1,12 @@
 # DualEdge: characterising battery-powered dual-model edge inference
 
-Code, raw telemetry and analysis for the study *"Idle power, not inference, sets the
-energy per unit of work of a battery-powered dual-detector edge node: a pack-rail
-characterisation on Raspberry Pi 5 and Jetson Orin Nano Super"* (under review).
+Code, raw telemetry and analysis for the study *"Idle Power, Not Inference Speed,
+Sets the Energy Cost of an Intermittently Scheduled Multi-Model Edge Node"*
+(under review).
+
+**Known defects in this repository are recorded in [`ERRATA.md`](ERRATA.md).**
+None affects a reported result. Every number in the paper can be recomputed from
+the released CSV files with `python analysis/verify_paper_numbers.py .`
 
 **DualEdge** is a small, platform-agnostic framework for measuring what a
 multi-model inference node actually costs at the battery rail. One runtime runs two
@@ -31,6 +35,7 @@ Headline results, all regenerable from the CSVs in this repository:
   ready-state baseline is 3.6–4.1 W.
 - Docker costs nothing measurable at run time on either platform.
 
+
 ## Repository structure
 
 ```
@@ -48,7 +53,8 @@ Headline results, all regenerable from the CSVs in this repository:
 │                                   Fig. 3 latency distributions, Fig. 4 throughput–latency)
 ├── analysis/
 │   ├── two_state_decomposition.py  idle / inferring split, energy floor, crossover
-│   └── rpi5_policy_energy.py       per-policy pack energy + ready-state baseline (Table 4)
+│   ├── rpi5_policy_energy.py       per-policy pack energy + ready-state baseline (Table 3)
+│   └── verify_paper_numbers.py     recomputes EVERY number in the paper from the raw CSVs
 ├── ondemand/
 │   └── ondemand_session.py         instrumented operator-triggered session (future work)
 ├── figures/                        Figs. 1–4 at 300 dpi (PNG + PDF)
@@ -114,7 +120,8 @@ fails.
 python compare_platforms.py                          # Table 1 summary
 python reproduce/make_figures.py --repo . --out figures/
 python analysis/two_state_decomposition.py           # Table 2 (residual decomposition), Fig. 2 numbers
-python analysis/rpi5_policy_energy.py                # Table 4 and the ready-state baseline of Section 5.2
+python analysis/rpi5_policy_energy.py                # Table 3 and the ready-state baseline of Section 5.2
+python analysis/verify_paper_numbers.py .            # recompute and check every reported number
 ```
 
 Every number in the paper's Sections 5–6 regenerates from `*/data/*.csv`. Note the
@@ -143,11 +150,18 @@ different numbers.
 
 | Platform | UPS module | Monitor | State of charge |
 |---|---|---|---|
-| Raspberry Pi 5 | Waveshare UPS HAT (E), 4 × 21700 (4S) | BQ4050 fuel gauge via on-board MCU, I2C 0x2D | gauge reading |
+| Raspberry Pi 5 | Waveshare UPS HAT (E), 4 × 21700 (4S) | coulomb-counting gauge via on-board MCU, I2C 0x2D (no vendor part number) | gauge reading |
 | Jetson Orin Nano Super | Waveshare UPS Power Module (C), 3 × 21700 (3S) | INA219, I2C 0x41 | vendor linear map of pack voltage (9.0–12.6 V → 0–100 %) — **not** a fuel gauge |
 
 Both use 5,000 mAh cells. Voltage and current are direct measurements on both
-platforms; only the `Batt_Percent` column differs in provenance. Select the
+platforms; only the `Batt_Percent` column differs in provenance.
+
+> **Two caveats on the Raspberry Pi 5 gauge, both recorded in [`ERRATA.md`](ERRATA.md).**
+> The vendor publishes no part number or schematic for it; it is identified here
+> by behaviour as a coulomb-counting gauge, and no part number is claimed.
+> Vendor status register `0x02` is **unpopulated on this board**, so the
+> `Batt_State` column of `raspberry-pi/data/raspberry_battery.csv` is wrong
+> (`idle` throughout a discharge). No reported quantity reads that column. Select the
 backend with `BATT_BACKEND=waveshare_ups_hat_e` (Pi) or
 `BATT_BACKEND=waveshare_ina219` (Jetson); see `battery_backends.py`.
 

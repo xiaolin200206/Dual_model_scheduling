@@ -5,11 +5,12 @@ authors:
   - family-names: Lin
     given-names: Ding Shan
     affiliation: "Institute of Computer Science and Digital Innovation, UCSI University"
+    orcid: "https://orcid.org/0009-0009-6031-8479"
 repository-code: "https://github.com/xiaolin200206/Dual_model_scheduling"
 license: MIT
 preferred-citation:
   type: article
-  title: "Characterising battery-powered dual-model edge inference: an open framework and a two-platform ARM study of scheduling, energy and cost"
+  title: "Idle Power, Not Inference Speed, Sets the Energy Cost of an Intermittently Scheduled Multi-Model Edge Node"
   authors:
     - family-names: Lin
       given-names: Ding Shan

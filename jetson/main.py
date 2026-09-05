@@ -215,7 +215,7 @@ def get_gpu_load():
 # ================= HELPERS: BATTERY =================
 # Pack-rail telemetry via the UPS module's I2C monitor. Backend is selected with
 # BATT_BACKEND (see battery_backends.py):
-#   waveshare_ups_hat_e  Raspberry Pi 5 + Waveshare UPS HAT (E): BQ4050 fuel gauge via MCU @0x2D
+#   waveshare_ups_hat_e  Raspberry Pi 5 + Waveshare UPS HAT (E): coulomb-counting gauge via MCU @0x2D
 #   waveshare_ina219     Jetson Orin + Waveshare UPS Power Module (C): INA219 @0x41,
 #                        SoC = vendor linear voltage map (not a fuel gauge)
 # Returns (volt_mV, curr_mA, pct, state); current negative when discharging.

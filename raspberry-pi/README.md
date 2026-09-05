@@ -4,7 +4,7 @@
 - **OS:** Raspberry Pi OS (Bookworm), 64-bit
 - **Camera:** USB 2K autofocus UVC webcam, MJPG @ 1280×720 (identical on both platforms)
 - **Inference:** ONNX Runtime, `CPUExecutionProvider`, via the Ultralytics ONNX backend
-- **UPS:** Waveshare UPS HAT (E), 4 × 21700 5,000 mAh; BQ4050 fuel gauge via MCU @0x2D
+- **UPS:** Waveshare UPS HAT (E), 4 × 21700 5,000 mAh; coulomb-counting gauge via MCU @0x2D (vendor publishes no part number — see ERRATA.md)
 - **Cooling:** official Active Cooler, default fan curve
 - **Software thermal cut-off:** 82 °C (`MAX_TEMP_LIMIT` in `main.py`)
 
